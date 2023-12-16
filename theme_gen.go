@@ -69,19 +69,19 @@ func (myTheme) Icon(n fyne.ThemeIconName) fyne.Resource {
 func (myTheme) Size(s fyne.ThemeSizeName) float32 {
 	switch s {
 	case theme.SizeNameCaptionText:
-		return 11
+		return 7
 	case theme.SizeNameInlineIcon:
-		return 20
+		return 16
 	case theme.SizeNamePadding:
 		return 4
 	case theme.SizeNameScrollBar:
-		return 16
+		return 1
 	case theme.SizeNameScrollBarSmall:
 		return 3
 	case theme.SizeNameSeparatorThickness:
 		return 1
 	case theme.SizeNameText:
-		return 14
+		return 12
 	case theme.SizeNameInputBorder:
 		return 2
 	default:

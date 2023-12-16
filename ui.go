@@ -19,89 +19,20 @@ type RequestItem struct {
 func createMainWindow(app fyne.App) fyne.Window {
 	myWindow := app.NewWindow("API Testing Tool")
 
-	// Navigation Bar Setup
-	logo := widget.NewLabel("App Logo") // Replace with an actual logo widget
-
-	// Environment Dropdown Setup
-	envLabel := widget.NewLabel("Environment:")
-	envOptions := []string{"Development", "Staging", "Production", "Create New..."}
-	envDropdown := widget.NewSelect(envOptions, func(value string) {
-		if value == "Create New..." {
-			showCreateEnvDialog(myWindow)
-		} else {
-			fmt.Println("Environment Selected:", value)
-			// Add logic to handle environment change
-		}
-	})
-	envDropdown.SetSelectedIndex(0) // Set default environment
-
-	navBar := container.NewHBox(
-		logo,
-		layout.NewSpacer(), // This pushes the dropdown to the right
-		envLabel,
-		envDropdown,
-	)
-
-	// Sample data
-	// requests := []RequestItem{
-	// 	{"Request 1", "GET"},
-	// 	{"Request 2", "POST"},
-	// 	// Add more requests here
-	// }
-
-	// Function to create a widget for each request
-	// createListItem := func(index int) fyne.CanvasObject {
-	// 	return widget.NewLabel(requests[index].Name + " - " + requests[index].Type)
-	// }
-
-	// List of requests
-	// requestList := widget.NewList(
-	// 	func() int { return len(requests) },
-	// 	func() fyne.CanvasObject { return widget.NewLabel("") },
-	// 	func(index widget.ListItemID, item fyne.CanvasObject) {
-	// 		item.(*widget.Label).SetText(requests[index].Type + " " + requests[index].Name)
-	// 	},
-	// )
-
-	// Sidebar with search bar and list
-	// sidebar := container.NewVBox(
-	// 	newSearchEntry(),
-	// 	requestList,
-	// )
-
-	// Function to create a new tab with request and response areas
-	createTab := func(tabNum int) *container.TabItem {
-		requestContainer := newRequestContainer()
-		responseEntry := widget.NewMultiLineEntry()
-		responseEntry.Disable()
-		content := container.NewBorder(requestContainer, nil, nil, nil, responseEntry)
-		return container.NewTabItem(fmt.Sprintf("Request %d", tabNum), content)
-	}
-
-	// Tabs container
-	tabs := container.NewDocTabs(createTab(1))
-	i := 1
-	tabs.CreateTab = func() *container.TabItem {
-		i++
-		return createTab(i)
-	}
-
-	// Layout for the add button and the tabs
-	mainContent := container.NewBorder(nil, nil, nil, nil, tabs)
-
 	// Combine sidebar and main content
-	splitLayout := container.NewHSplit(newSideBar(), mainContent)
+	splitLayout := container.NewHSplit(newSideBar(), newMainContent())
 	splitLayout.Offset = 0.18 // Sidebar takes 20% of the window
 
-	mainContainer := container.NewHSplit(newActivityBar(), splitLayout)
-	mainContainer.Offset = 0.04
-	// Activity Bar
-	// mainSplit := container.NewHSplit(newActivityBar(), splitLayout)
-	// mainSplit.Offset = 0.04
+	appTabs := container.NewAppTabs(
+		container.NewTabItemWithIcon("Collections", theme.FolderIcon(), splitLayout),
+		container.NewTabItemWithIcon("Environments", theme.GridIcon(), widget.NewLabel("Environments")),
+	)
 
+	appTabs.SetTabLocation(container.TabLocationLeading)
 	// Set the content of the window
-	myWindow.SetContent(container.NewBorder(navBar, nil, nil, nil, mainContainer))
+	myWindow.SetContent(container.NewBorder(newNavBar(myWindow), nil, nil, nil, appTabs))
 	myWindow.Resize(fyne.NewSize(800, 600)) // Set window size
+
 	return myWindow
 }
 
@@ -120,22 +51,64 @@ func showCreateEnvDialog(win fyne.Window) {
 	}, win)
 }
 
-func newSearchEntry() *widget.Entry {
-	searchEntry := widget.NewEntry()
-	searchEntry.SetPlaceHolder("Search ...")
-	searchEntry.ActionItem = widget.NewIcon(theme.SearchIcon())
-	return searchEntry
+func newMainContent() *fyne.Container {
+	// Function to create a new tab with request and response areas
+	createTab := func(tabNum int) *container.TabItem {
+		requestContainer := newRequestContainer()
+		responseEntry := widget.NewMultiLineEntry()
+		responseEntry.Disable()
+		content := container.NewBorder(requestContainer, nil, nil, nil, responseEntry)
+		return container.NewTabItem(fmt.Sprintf("Request %d", tabNum), content)
+	}
+
+	// Tabs container
+	tabs := container.NewDocTabs(createTab(1))
+	i := 1
+	tabs.CreateTab = func() *container.TabItem {
+		i++
+		return createTab(i)
+	}
+
+	// Layout for the add button and the tabs
+	return container.NewBorder(nil, nil, nil, nil, tabs)
+}
+
+func newNavBar(win fyne.Window) *fyne.Container {
+	// Navigation Bar Setup
+	logo := widget.NewLabel("App Logo") // Replace with an actual logo widget
+
+	// Environment Dropdown Setup
+	envLabel := widget.NewLabel("Environment:")
+	envOptions := []string{"Development", "Staging", "Production", "Create New..."}
+	envDropdown := widget.NewSelect(envOptions, func(value string) {
+		if value == "Create New..." {
+			showCreateEnvDialog(win)
+		} else {
+			fmt.Println("Environment Selected:", value)
+			// Add logic to handle environment change
+		}
+	})
+	envDropdown.SetSelectedIndex(0) // Set default environment
+
+	return container.NewHBox(
+		logo,
+		layout.NewSpacer(), // This pushes the dropdown to the right
+		envLabel,
+		envDropdown,
+	)
 }
 
 func newSideBar() *fyne.Container {
-	// toolbar := widget.NewToolbar(
-	// 	widget.NewToolbarAction(theme.ContentAddIcon(), func() {}),
-	// )
+	addBtn := widget.NewButton("Add", func() {})
+	addBtn.Importance = widget.LowImportance
+
+	importBtn := widget.NewButton("Import", func() {})
+	importBtn.Importance = widget.LowImportance
 
 	toolbar := container.NewHBox(
 		layout.NewSpacer(),
-		widget.NewButton("Add", func() {}),
-		widget.NewButton("Import", func() {}),
+		addBtn,
+		importBtn,
 	)
 
 	searchEntry := widget.NewEntry()
@@ -176,16 +149,4 @@ func newRequestContainer() *fyne.Container {
 
 	requestConfig := container.NewBorder(nil, nil, methodDropdown, sendButton, urlEntry)
 	return requestConfig
-}
-
-func newActivityBar() *fyne.Container {
-	collectionsButton := widget.NewButtonWithIcon("", theme.FolderIcon(), func() {})
-	environmentsButton := widget.NewButtonWithIcon("", theme.GridIcon(), func() {})
-
-	activityBar := container.NewVBox(
-		collectionsButton,
-		environmentsButton,
-	)
-
-	return activityBar
 }

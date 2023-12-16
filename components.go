@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
-
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -14,13 +12,18 @@ import (
 type RequestListObject struct {
 	widget.BaseWidget
 
-	Type *canvas.Text
-	Name *EditableLabel
+	Type *CustomLabel
+	Name *widget.Label
+
+	renderer fyne.WidgetRenderer
+
+	hovered    bool
+	menuButton *widget.Button
 }
 
 // SetType sets the type of the request
 func (reqList *RequestListObject) SetType(t string) {
-	reqList.Type.Text = t
+	reqList.Type.SetText(t)
 }
 
 // SetName sets the name of the request
@@ -33,70 +36,67 @@ func NewRequestListObject(requestType, name string) *RequestListObject {
 	e := widget.NewEntry()
 	e.SetText(name)
 
-	t := canvas.NewText(requestType, theme.ButtonColor())
-	t.TextStyle.Monospace = true
-	t.TextStyle.Bold = true
-	t.Alignment = fyne.TextAlignTrailing
-
 	item := &RequestListObject{
-		Type: t,
-		Name: NewEditableLabel(name),
+		Type: NewCustomLabel(requestType, fyne.NewSize(50, 0), fyne.TextAlignTrailing),
+		Name: widget.NewLabel(name), // e, //NewEditableLabel(name),
 	}
 
-	item.ExtendBaseWidget(item)
+	menu := fyne.NewMenu("",
+		fyne.NewMenuItem("Delete", func() {}),
+		fyne.NewMenuItem("Duplicate", func() {}),
+	)
 
+	item.menuButton = widget.NewButtonWithIcon("", theme.MoreHorizontalIcon(), func() {
+		position := fyne.CurrentApp().Driver().AbsolutePositionForObject(item.menuButton)
+		position.Y += item.menuButton.Size().Height
+
+		widget.ShowPopUpMenuAtPosition(menu, fyne.CurrentApp().Driver().CanvasForObject(item.menuButton), position)
+	})
+
+	item.menuButton.Importance = widget.LowImportance
+	item.menuButton.Hide()
+
+	item.ExtendBaseWidget(item)
 	return item
+}
+
+// MouseIn is called when a desktop pointer enters the widget
+func (reqList *RequestListObject) MouseIn(*desktop.MouseEvent) {
+	reqList.menuButton.Show()
+}
+
+// MouseMoved is called when a desktop pointer hovers over the widget
+func (reqList *RequestListObject) MouseMoved(*desktop.MouseEvent) {
+}
+
+// MouseOut is called when a desktop pointer exits the widget
+func (reqList *RequestListObject) MouseOut() {
+	reqList.hovered = false
+	reqList.menuButton.Hide()
 }
 
 // CreateRenderer is a private method to Fyne which links this widget to its renderer
 func (reqList *RequestListObject) CreateRenderer() fyne.WidgetRenderer {
-	c := container.NewBorder(nil, nil, reqList.Type, nil, reqList.Name)
+	c := container.NewBorder(nil, nil, reqList.Type, reqList.menuButton, reqList.Name)
 	return widget.NewSimpleRenderer(c)
 }
 
-type EditableLabel struct {
+type CustomLabel struct {
 	*widget.Label
-	Entry *widget.Entry
 
-	editing bool
+	minSize   fyne.Size
+	alignment fyne.TextAlign
 }
 
-func NewEditableLabel(text string) *EditableLabel {
-	label := widget.NewLabel(text)
-	entry := widget.NewEntry()
-	entry.SetText(text)
+func NewCustomLabel(text string, minSize fyne.Size, alignment fyne.TextAlign) *CustomLabel {
+	label := widget.NewLabelWithStyle(text, alignment, fyne.TextStyle{Monospace: false, Bold: true})
 
-	entry.OnChanged = func(s string) {
-		label.SetText(s)
-	}
-
-	editableLabel := &EditableLabel{
-		Label: label,
-		Entry: entry,
-	}
-
-	editableLabel.ExtendBaseWidget(editableLabel)
-	return editableLabel
-}
-
-func (editLabel *EditableLabel) Tapped(_ *fyne.PointEvent) {
-	fmt.Println("Tapped")
-	editLabel.editing = true
-	editLabel.Refresh()
-}
-
-func (editLabel *EditableLabel) TypedRune(r rune) {
-	if r == '\r' {
-		editLabel.editing = false
-		editLabel.Refresh()
+	return &CustomLabel{
+		Label:   label,
+		minSize: minSize,
 	}
 }
 
-// CreateRenderer is a private method to Fyne which links this widget to its renderer
-func (editLabel *EditableLabel) CreateRenderer() fyne.WidgetRenderer {
-	if editLabel.editing {
-		return widget.NewSimpleRenderer(editLabel.Entry)
-	}
-
-	return widget.NewSimpleRenderer(editLabel.Label)
+func (l *CustomLabel) MinSize() fyne.Size {
+	return l.minSize
 }
