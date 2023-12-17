@@ -15,8 +15,6 @@ type RequestListObject struct {
 	Type *CustomLabel
 	Name *widget.Label
 
-	renderer fyne.WidgetRenderer
-
 	hovered    bool
 	menuButton *widget.Button
 }
@@ -62,7 +60,8 @@ func NewRequestListObject(requestType, name string) *RequestListObject {
 
 // MouseIn is called when a desktop pointer enters the widget
 func (reqList *RequestListObject) MouseIn(*desktop.MouseEvent) {
-	reqList.menuButton.Show()
+	reqList.hovered = true
+	reqList.Refresh()
 }
 
 // MouseMoved is called when a desktop pointer hovers over the widget
@@ -72,7 +71,17 @@ func (reqList *RequestListObject) MouseMoved(*desktop.MouseEvent) {
 // MouseOut is called when a desktop pointer exits the widget
 func (reqList *RequestListObject) MouseOut() {
 	reqList.hovered = false
-	reqList.menuButton.Hide()
+	reqList.Refresh()
+}
+
+// Refresh is called when the widget should be redrawn
+func (reqList *RequestListObject) Refresh() {
+	if reqList.hovered {
+		reqList.menuButton.Show()
+	} else {
+		reqList.menuButton.Hide()
+	}
+	reqList.BaseWidget.Refresh()
 }
 
 // CreateRenderer is a private method to Fyne which links this widget to its renderer
