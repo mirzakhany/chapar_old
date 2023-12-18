@@ -52,15 +52,6 @@ func showCreateEnvDialog(win fyne.Window) {
 }
 
 func newMainContent() *fyne.Container {
-	// Function to create a new tab with request and response areas
-	createTab := func(tabNum int) *container.TabItem {
-		requestContainer := newRequestContainer()
-		responseEntry := widget.NewMultiLineEntry()
-		responseEntry.Disable()
-		content := container.NewBorder(requestContainer, nil, nil, nil, responseEntry)
-		return container.NewTabItem(fmt.Sprintf("Request %d", tabNum), content)
-	}
-
 	// Tabs container
 	tabs := container.NewDocTabs(createTab(1))
 	i := 1
@@ -71,6 +62,14 @@ func newMainContent() *fyne.Container {
 
 	// Layout for the add button and the tabs
 	return container.NewBorder(nil, nil, nil, nil, tabs)
+}
+
+func createTab(tabNum int) *container.TabItem {
+	requestContainer := newRequestContainer()
+	responseEntry := widget.NewMultiLineEntry()
+	responseEntry.Disable()
+	content := container.NewBorder(requestContainer, nil, nil, nil, responseEntry)
+	return container.NewTabItem(fmt.Sprintf("Request %d", tabNum), content)
 }
 
 func newNavBar(win fyne.Window) *fyne.Container {
@@ -138,7 +137,14 @@ func newSideBar() *fyne.Container {
 }
 
 func newRequestContainer() *fyne.Container {
-	methodDropdown := widget.NewSelect([]string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTION", "HEAD", "-", "GRPC"}, func(value string) {})
+	// Request Config Setup
+	protocolSelect := widget.NewSelect([]string{"HTTP/S", "GRPC"}, func(value string) {})
+	protocolSelect.SetSelectedIndex(0)
+
+	requestName := widget.NewLabel("Request Name")
+	nameConfig := container.NewBorder(nil, widget.NewSeparator(), protocolSelect, nil, requestName)
+
+	methodDropdown := widget.NewSelect([]string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTION", "HEAD"}, func(value string) {})
 	methodDropdown.SetSelectedIndex(0)
 
 	urlEntry := widget.NewEntry()
@@ -147,6 +153,6 @@ func newRequestContainer() *fyne.Container {
 		// Logic to handle the API request goes here
 	})
 
-	requestConfig := container.NewBorder(nil, nil, methodDropdown, sendButton, urlEntry)
+	requestConfig := container.NewBorder(nameConfig, nil, methodDropdown, sendButton, urlEntry)
 	return requestConfig
 }
