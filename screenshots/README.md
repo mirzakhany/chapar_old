@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="logo.png" alt="Chapar" width="200"/>
+</div>
+
 # Chapar
 
 Chapar is a simple and easy to use api testing tools aims to help developers to test their api endpoints.
