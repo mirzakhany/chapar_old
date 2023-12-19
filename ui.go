@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/mirzakhany/chapar/components"
 )
 
 type RequestItem struct {
@@ -123,9 +124,9 @@ func newSideBar() *fyne.Container {
 	// List of requests
 	requestList := widget.NewList(
 		func() int { return len(requests) },
-		func() fyne.CanvasObject { return NewRequestListObject("", "") },
+		func() fyne.CanvasObject { return components.NewRequestListObject("", "") },
 		func(index widget.ListItemID, item fyne.CanvasObject) {
-			i := item.(*RequestListObject)
+			i := item.(*components.RequestListObject)
 			i.SetType(requests[index].Type)
 			i.SetName(requests[index].Name)
 		},
@@ -141,7 +142,7 @@ func newRequestContainer() *fyne.Container {
 	protocolSelect := widget.NewSelect([]string{"HTTP/S", "GRPC"}, func(value string) {})
 	protocolSelect.SetSelectedIndex(0)
 
-	requestName := widget.NewLabel("Request Name")
+	requestName := components.NewEditableLabel("Request Name")
 	nameConfig := container.NewBorder(nil, widget.NewSeparator(), protocolSelect, nil, requestName)
 
 	methodDropdown := widget.NewSelect([]string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTION", "HEAD"}, func(value string) {})

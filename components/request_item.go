@@ -1,4 +1,4 @@
-package main
+package components
 
 import (
 	"fyne.io/fyne/v2"
@@ -13,7 +13,7 @@ type RequestListObject struct {
 	widget.BaseWidget
 
 	Type *CustomLabel
-	Name *widget.Label
+	Name *EditableLabel
 
 	hovered    bool
 	menuButton *widget.Button
@@ -36,7 +36,7 @@ func NewRequestListObject(requestType, name string) *RequestListObject {
 
 	item := &RequestListObject{
 		Type: NewCustomLabel(requestType, fyne.NewSize(50, 0), fyne.TextAlignTrailing),
-		Name: widget.NewLabel(name), // e, //NewEditableLabel(name),
+		Name: NewEditableLabel(name), // e, //NewEditableLabel(name),
 	}
 
 	menu := fyne.NewMenu("",
@@ -88,24 +88,4 @@ func (reqList *RequestListObject) Refresh() {
 func (reqList *RequestListObject) CreateRenderer() fyne.WidgetRenderer {
 	c := container.NewBorder(nil, nil, reqList.Type, reqList.menuButton, reqList.Name)
 	return widget.NewSimpleRenderer(c)
-}
-
-type CustomLabel struct {
-	*widget.Label
-
-	minSize   fyne.Size
-	alignment fyne.TextAlign
-}
-
-func NewCustomLabel(text string, minSize fyne.Size, alignment fyne.TextAlign) *CustomLabel {
-	label := widget.NewLabelWithStyle(text, alignment, fyne.TextStyle{Monospace: false, Bold: true})
-
-	return &CustomLabel{
-		Label:   label,
-		minSize: minSize,
-	}
-}
-
-func (l *CustomLabel) MinSize() fyne.Size {
-	return l.minSize
 }
