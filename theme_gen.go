@@ -83,7 +83,7 @@ func (myTheme) Size(s fyne.ThemeSizeName) float32 {
 	case theme.SizeNameText:
 		return 12
 	case theme.SizeNameInputBorder:
-		return 2
+		return 1
 	default:
 		return theme.DefaultTheme().Size(s)
 	}

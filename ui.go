@@ -21,7 +21,7 @@ func createMainWindow(app fyne.App) fyne.Window {
 	myWindow := app.NewWindow("API Testing Tool")
 
 	// Combine sidebar and main content
-	splitLayout := container.NewHSplit(newSideBar(), newMainContent())
+	splitLayout := container.NewHSplit(newSideBar(), newMainContent(myWindow))
 	splitLayout.Offset = 0.18 // Sidebar takes 20% of the window
 
 	appTabs := container.NewAppTabs(
@@ -52,21 +52,21 @@ func showCreateEnvDialog(win fyne.Window) {
 	}, win)
 }
 
-func newMainContent() *fyne.Container {
+func newMainContent(win fyne.Window) *fyne.Container {
 	// Tabs container
-	tabs := container.NewDocTabs(createTab(1))
+	tabs := container.NewDocTabs(createTab(win, 1))
 	i := 1
 	tabs.CreateTab = func() *container.TabItem {
 		i++
-		return createTab(i)
+		return createTab(win, i)
 	}
 
 	// Layout for the add button and the tabs
 	return container.NewBorder(nil, nil, nil, nil, tabs)
 }
 
-func createTab(tabNum int) *container.TabItem {
-	requestContainer := newRequestContainer()
+func createTab(win fyne.Window, tabNum int) *container.TabItem {
+	requestContainer := newRequestContainer(win)
 	responseEntry := widget.NewMultiLineEntry()
 	responseEntry.Disable()
 	content := container.NewBorder(requestContainer, nil, nil, nil, responseEntry)
@@ -137,7 +137,7 @@ func newSideBar() *fyne.Container {
 	return cn
 }
 
-func newRequestContainer() *fyne.Container {
+func newRequestContainer(win fyne.Window) *fyne.Container {
 	// Request Config Setup
 	protocolSelect := widget.NewSelect([]string{"HTTP/S", "GRPC"}, func(value string) {})
 	protocolSelect.SetSelectedIndex(0)

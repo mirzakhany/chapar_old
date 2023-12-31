@@ -2,6 +2,7 @@ package components
 
 import (
 	"image/color"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
@@ -14,6 +15,11 @@ type EditableLabel struct {
 	label             *widget.Label
 	editor            *widget.Entry
 	editing           bool
+
+	lastTap time.Time
+
+	// OnChanged is called when the text of the EditableLabel changes.
+	OnChanged func(string)
 }
 
 // NewEditableLabel creates a new EditableLabel with the specified text.
@@ -27,24 +33,30 @@ func NewEditableLabel(text string) *EditableLabel {
 	el.editor.Hide()
 	el.editor.OnChanged = func(s string) {
 		el.label.SetText(s)
+
+		if el.OnChanged != nil {
+			el.OnChanged(s)
+		}
 	}
+
 	el.editor.OnSubmitted = func(s string) {
 		el.editing = false
 		el.toggleEditing()
 	}
 
-	//el.editor.OnFocusLost = func() {
-	//	el.editing = false
-	//	el.toggleEditing()
-	//}
-
 	return el
 }
 
 // Tapped toggles the editing mode on tap events.
+// If the user taps twice within 500ms, the editing mode is toggled.
 func (e *EditableLabel) Tapped(_ *fyne.PointEvent) {
-	e.editing = !e.editing
-	e.toggleEditing()
+	now := time.Now()
+	if now.Sub(e.lastTap) < time.Millisecond*500 {
+		e.editing = !e.editing
+		e.toggleEditing()
+	} else {
+		e.lastTap = now
+	}
 }
 
 // toggleEditing switches between label and editor visibility.
@@ -86,6 +98,7 @@ type editableLabelRenderer struct {
 	el     *EditableLabel
 }
 
+// MinSize returns the minimum size of the EditableLabel.
 func (r *editableLabelRenderer) MinSize() fyne.Size {
 	if r.el.editing {
 		return r.editor.MinSize()
@@ -93,22 +106,27 @@ func (r *editableLabelRenderer) MinSize() fyne.Size {
 	return r.label.MinSize()
 }
 
+// Layout positions the label and editor widgets.
 func (r *editableLabelRenderer) Layout(size fyne.Size) {
 	r.label.Resize(size)
 	r.editor.Resize(size)
 }
 
+// BackgroundColor returns the background color of the EditableLabel.
 func (r *editableLabelRenderer) BackgroundColor() color.Color {
 	return theme.BackgroundColor()
 }
 
+// Objects returns the label and editor widgets.
 func (r *editableLabelRenderer) Objects() []fyne.CanvasObject {
 	return []fyne.CanvasObject{r.label, r.editor}
 }
 
+// Refresh updates the label and editor widgets.
 func (r *editableLabelRenderer) Refresh() {
 	r.label.Refresh()
 	r.editor.Refresh()
 }
 
+// Destroy is a no-op.
 func (r *editableLabelRenderer) Destroy() {}
